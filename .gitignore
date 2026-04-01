@@ -1,0 +1,34 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+app.log
+server_log.txt
+
+# React / Node.js
+app/react-frontend/node_modules/
+app/react-frontend/dist/
+app/react-frontend/.next/
+app/react-frontend/build/
+app/react-frontend/.env
+
+# Local Environment
+.env
+
+# OS Files
+.DS_Store
+Thumbs.db

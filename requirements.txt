@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pandas
+numpy
+scikit-learn
+psycopg2-binary
+sqlalchemy
+python-dotenv
+python-multipart
+bcrypt
+joblib
+boto3
+gunicorn
+psutil

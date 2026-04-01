@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioNexus ML - Bioprocess Intelligence Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dark-theme">
+    <div id="app">
+        <!-- Auth Section -->
+        <main id="auth-section" class="auth-wrapper">
+            <div class="ambient-orb orb-1"></div>
+            <div class="ambient-orb orb-2"></div>
+            
+            <div class="auth-centered">
+                <div class="auth-branding">
+                    <h1 class="hero-title">BioNexus ML</h1>
+                    <p class="hero-subtitle">Bioprocess Intelligence Dashboard</p>
+                    <div class="hero-accent"></div>
+                </div>
+                
+                <form id="login-form">
+                    <h2 class="text-center">Welcome Back</h2>
+                    <div class="floating-input-group">
+                        <input type="text" id="username" required placeholder=" ">
+                        <label for="username">Username</label>
+                    </div>
+                    <div class="floating-input-group">
+                        <input type="password" id="password" required placeholder=" ">
+                        <label for="password">Password</label>
+                        <button type="button" class="toggle-password" onclick="
+                            const input = document.getElementById('password');
+                            input.type = input.type === 'password' ? 'text' : 'password';
+                            this.innerText = input.type === 'password' ? '👁️' : '👁️‍🗨️';
+                        ">👁️</button>
+                    </div>
+                    <div id="login-error" class="error-msg hidden"></div>
+                    <button type="submit" class="primary-btn w-full mt-2">LOG IN</button>
+                    <p class="auth-footer text-center mt-2">
+                        Don't have an account? <a href="#" id="show-register">Register here</a>
+                    </p>
+                </form>
+
+                <form id="register-form" class="hidden">
+                    <h2 class="text-center">Create Account</h2>
+                    <div class="floating-input-group">
+                        <input type="text" id="reg-name" required placeholder=" ">
+                        <label for="reg-name">Full Name</label>
+                    </div>
+                    <div class="floating-input-group">
+                        <input type="text" id="reg-username" required placeholder=" ">
+                        <label for="reg-username">Username</label>
+                    </div>
+                    <div class="floating-input-group">
+                        <input type="email" id="reg-email" required placeholder=" ">
+                        <label for="reg-email">Email</label>
+                    </div>
+                    <div class="floating-input-group">
+                        <input type="password" id="reg-password" required placeholder=" ">
+                        <label for="reg-password">Password</label>
+                        <button type="button" class="toggle-password" onclick="
+                            const input = document.getElementById('reg-password');
+                            input.type = input.type === 'password' ? 'text' : 'password';
+                            this.innerText = input.type === 'password' ? '👁️' : '👁️‍🗨️';
+                        ">👁️</button>
+                    </div>
+                    <div id="register-message" class="info-msg hidden"></div>
+                    <button type="submit" class="primary-btn w-full mt-2">REGISTER</button>
+                    <p class="auth-footer text-center mt-2">
+                        Already have an account? <a href="#" id="show-login">Log In</a>
+                    </p>
+                </form>
+            </div>
+        </main>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="hidden">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo-area">
+                        <span class="version-tag">Version: 3.78-FINAL</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-content">
+                    <!-- Configuration Section -->
+                    <div class="sidebar-group">
+                        <h3>⚙️ Configuration</h3>
+                        <div class="input-group">
+                            <label>Select Model</label>
+                            <select id="model-select">
+                                <option value="model_ridgecv.joblib">RidgeCV (Default)</option>
+                                <option value="model_gbr.joblib">Gradient Boosting</option>
+                                <option value="model_linear.joblib">Linear Model</option>
+                                <option value="model_custom.joblib">Custom Model</option>
+                                <option value="Custom...">Custom...</option>
+                            </select>
+                        </div>
+                        <div id="custom-model-group" class="input-group hidden">
+                            <label>Model Path</label>
+                            <input type="text" id="custom-model-path" placeholder="models/custom_model.joblib">
+                        </div>
+                        <div class="input-group">
+                            <label>Schema Mode</label>
+                            <select id="schema-select">
+                                <option value="feature_schema.json">feature_schema.json (Default)</option>
+                                <option value="feature_schema_custom.json">feature_schema_custom.json</option>
+                            </select>
+                        </div>
+                        
+                        <div class="radio-group mt-1">
+                            <label>Mode</label>
+                            <div class="radio-options">
+                                <label><input type="radio" name="mode" value="predict" checked> Predict</label>
+                                <label><input type="radio" name="mode" value="benchmark"> Benchmark</label>
+                            </div>
+                        </div>
+
+                        <div class="toggle-group mt-1">
+                            <label class="toggle">
+                                <input type="checkbox" id="use-threads">
+                                <span class="toggle-label">🧵 Threaded Prediction</span>
+                            </label>
+                        </div>
+                        
+                        <div id="batch-size-group" class="input-group mt-1 hidden">
+                            <label>Batch Size</label>
+                            <select id="batch-size">
+                                <option value="100">100</option>
+                                <option value="500">500</option>
+                                <option value="1000">1000</option>
+                                <option value="5000" selected>5000</option>
+                                <option value="10000">10000</option>
+                            </select>
+                        </div>
+                        
+                        <button id="run-btn" class="primary-btn w-full mt-2">▶ RUN ENGINE</button>
+                    </div>
+
+                    <hr class="sidebar-divider">
+
+                    <!-- Appearance Section -->
+                    <div class="sidebar-group" style="padding: 10px 5px; margin-top: 15px;">
+                        <h3 style="font-size: 1.2rem; margin-bottom: 15px; border-bottom: none; padding-bottom: 0;">🎨 Appearance</h3>
+                        <div style="display: flex; flex-direction: column; margin-bottom: 25px;">
+                            <span style="font-weight: bold; font-size: 0.95rem;">Theme</span>
+                            <span id="theme-label" style="font-size: 0.95rem; margin-bottom: 8px; font-weight: 500;">Dark</span>
+                            <input 
+                                type="range" 
+                                id="theme-slider"
+                                min="0" max="1" step="1" value="1"
+                                style="accent-color: #ff4b4b; cursor: pointer; height: 4px; background: rgba(200,200,200,0.3); border-radius: 2px; outline: none; -webkit-appearance: none; appearance: none;"
+                            >
+                        </div>
+                    </div>
+
+                    <hr class="sidebar-divider">
+
+                    <!-- Screen Recorder -->
+                    <div class="sidebar-group" style="padding: 10px 5px; margin-top: 15px;">
+                        <h3 style="font-size: 1.2rem; margin-bottom: 15px; border-bottom: none; padding-bottom: 0;">📸 Screen Recorder</h3>
+                        <div id="recorder-controls" style="display: flex; gap: 10px;">
+                            <button id="start-rec" style="background: #28a745; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; display: flex; align-items: center; gap: 6px; font-size: 0.95rem; font-weight: bold; cursor: pointer;">
+                                <div style="width: 8px; height: 8px; background: #fff; border-radius: 50%;"></div>
+                                Start
+                            </button>
+                            <button id="stop-rec" disabled style="background: #dc3545; color: #fff; border: none; padding: 8px 18px; border-radius: 6px; display: flex; align-items: center; gap: 6px; font-size: 0.95rem; font-weight: bold; cursor: not-allowed; opacity: 0.6;">
+                                <div style="width: 8px; height: 8px; background: #fff;"></div>
+                                Stop
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="sidebar-divider">
+
+                    <!-- User Profile & Admin -->
+                    <div class="sidebar-group user-area">
+                        <div class="user-info">
+                            <strong>👤 Active User:</strong> <span id="active-user-name">--</span><br>
+                            <span id="user-role-label" class="caption">Member: --</span>
+                        </div>
+                        
+                        <details id="admin-expander" class="admin-details">
+                            <summary>🔑 Admin Management</summary>
+                            <div class="admin-content">
+                                <section class="admin-section">
+                                    <h4>⏳ Pending Approvals</h4>
+                                    <div id="pending-users-list" class="user-list">
+                                        <p class="caption">No pending users.</p>
+                                    </div>
+                                </section>
+                                <section class="admin-section mt-1">
+                                    <h4>👤 User Management</h4>
+                                    <div id="active-users-list" class="user-list">
+                                        <!-- Injected by JS -->
+                                    </div>
+                                </section>
+                            </div>
+                        </details>
+
+                        <button id="logout-btn" class="secondary-btn w-full mt-2">LOGOUT</button>
+                    </div>
+
+                    <!-- Diagnostics Section -->
+                    <details class="sidebar-details mt-1">
+                        <summary>🛠️ Diagnostics</summary>
+                        <div id="diagnostics-info" class="caption" style="padding: 10px;">
+                            <!-- Injected by JS -->
+                        </div>
+                    </details>
+                </div>
+            </aside>
+
+            <!-- Main Dashboard Area -->
+            <main class="main-content">
+                <header class="dashboard-header">
+                    <h1>🔬 Bioreactor ML – Prediction Dashboard</h1>
+                    <div id="summary-bar" class="ticker-bar hidden">
+                        <div class="ticker-item">
+                            <span class="label">ACTIVE FILE:</span>
+                            <strong id="ticker-filename">--</strong>
+                        </div>
+                        <div class="ticker-item">
+                            <span class="label">AVG TEMP:</span>
+                            <strong id="ticker-temp">--</strong>
+                        </div>
+                        <div class="ticker-item">
+                            <span class="label">AVG pH:</span>
+                            <strong id="ticker-ph">--</strong>
+                        </div>
+                        <div class="ticker-item">
+                            <span class="label">AVG TITER:</span>
+                            <strong id="ticker-titer" class="accent-text">--</strong>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Navigation Tabs -->
+                <nav class="tab-nav">
+                    <button class="nav-btn active" data-target="predict-tab">🚀 Predict & Benchmark</button>
+                    <button class="nav-btn" data-target="train-tab">🏋️‍♂️ Train Model</button>
+                    <button class="nav-btn" data-target="explore-tab">📊 Data Exploration</button>
+                    <button class="nav-btn" data-target="history-tab">📜 History</button>
+                    <button class="nav-btn" data-target="guide-tab">📘 Guide</button>
+                    <button class="nav-btn" data-target="alerts-tab">🔔 Alerts</button>
+                    <button class="nav-btn" data-target="health-tab">🖥️ Health</button>
+                </nav>
+
+                <div class="tab-container">
+                    <!-- 1. Predict Tab -->
+                    <section id="predict-tab" class="tab-content active">
+                        <div class="content-header">
+                            <h3>Predict results or benchmark model performance</h3>
+                            <p class="caption">Use saved sklearn Pipeline model artifacts (.joblib) and schema (.json) to predict Product_Titer_gL from process data.</p>
+                        </div>
+
+                        <div class="predict-workspace">
+                            <div class="st-card">
+                                <h3>📥 Input Data</h3>
+                                <div class="upload-zone" id="drop-zone">
+                                    <p id="upload-instruction">Drag and drop CSV (new_samples or labeled data)</p>
+                                    <input type="file" id="file-upload" accept=".csv" class="hidden">
+                                    <button class="outline-btn mt-1" onclick="document.getElementById('file-upload').click()">Browse files</button>
+                                    <p id="file-name" class="file-label hidden"></p>
+                                </div>
+                                <div class="checkbox-group mt-1">
+                                    <label class="checkbox">
+                                        <input type="checkbox" id="use-sample-check">
+                                        <span>Use local sample file: bioreactor_ml_dataset.csv</span>
+                                    </label>
+                                </div>
+                                
+                                <div id="input-preview-area" class="input-preview hidden">
+                                    <div class="preview-header">
+                                        <h4 id="preview-filename">--</h4>
+                                        <span id="preview-meta">Rows: -- | Cols: --</span>
+                                    </div>
+                                    <div class="table-container small">
+                                        <table id="preview-table"></table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="predict-results-area" class="results-area hidden">
+                                <div id="loading-spinner" class="spinner-container hidden">
+                                    <div class="spinner"></div>
+                                    <p>BioNexus Engine is calculating...</p>
+                                </div>
+
+                                <div id="results-display" class="hidden">
+                                    <div class="metrics-grid">
+                                        <div class="metric-card">
+                                            <span class="label tooltip-wrapper" data-tooltip="The average expected Product Titer output for this entire batch of predictive inputs.">Predicted Mean Yield ⓘ</span>
+                                            <h2 id="res-mean-yield" class="metric-val">--</h2>
+                                        </div>
+                                        <div id="benchmark-metrics" class="metrics-subgrid hidden">
+                                            <div class="metric-card">
+                                                <span class="label tooltip-wrapper" data-tooltip="Variance completely explained by inputs. 0.8+ is generally considered excellent.">Test R² ⓘ</span>
+                                                <h2 id="res-r2" class="metric-val">--</h2>
+                                            </div>
+                                            <div class="metric-card">
+                                                <span class="label tooltip-wrapper" data-tooltip="Mean Absolute Error: The average 'miss' distance between predicted and actual values in real units (g/L).">MAE (g/L) ⓘ</span>
+                                                <h2 id="res-mae" class="metric-val">--</h2>
+                                            </div>
+                                            <div class="metric-card">
+                                                <span class="label tooltip-wrapper" data-tooltip="Root Mean Squared Error: Extremely sensitive to outliers. High RMSE means the model makes rare but large mistakes.">RMSE (g/L) ⓘ</span>
+                                                <h2 id="res-rmse" class="metric-val">--</h2>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="results-layout mt-2">
+                                        <div class="st-card chart-box">
+                                            <h3>📈 Results Preview (Top 100)</h3>
+                                            <div class="table-container">
+                                                <table id="results-table">
+                                                    <thead>
+                                                        <tr><th>Sample</th><th>Predicted Titer</th></tr>
+                                                    </thead>
+                                                    <tbody></tbody>
+                                                </table>
+                                            </div>
+                                            <button id="download-results" class="outline-btn w-full mt-1">⬇️ Download predictions.csv</button>
+                                        </div>
+                                        <div class="st-card chart-box">
+                                            <h3>📊 Distribution</h3>
+                                            <div class="chart-wrapper">
+                                                <canvas id="res-dist-chart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="benchmark-insights" class="results-layout mt-1 hidden">
+                                        <div class="st-card chart-box">
+                                            <h3>🎯 Actual vs Predicted</h3>
+                                            <div class="chart-wrapper">
+                                                <canvas id="res-scatter-chart"></canvas>
+                                            </div>
+                                        </div>
+                                        <div class="st-card chart-box">
+                                            <h3>💡 Model Insights</h3>
+                                            <div class="chart-wrapper">
+                                                <canvas id="res-importance-chart"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 2. Train Tab -->
+                    <section id="train-tab" class="tab-content">
+                        <div class="content-header">
+                            <h3>🏋️‍♂️ Train a New Model</h3>
+                            <p class="caption">Upload labeled data to train a new RidgeCV pipeline. This will save a .joblib model and a .json schema.</p>
+                        </div>
+                        <div class="st-card mt-2">
+                            <div class="upload-zone" id="train-drop-zone">
+                                <p>Upload Training CSV (labeled data)</p>
+                                <input type="file" id="train-upload" accept=".csv" class="hidden">
+                                <button class="outline-btn mt-1" onclick="document.getElementById('train-upload').click()">Browse Files</button>
+                            </div>
+                            <div class="form-row mt-2">
+                                <div class="input-group">
+                                    <label>Target Column</label>
+                                    <input type="text" id="train-target" value="Product_Titer_gL">
+                                </div>
+                                <div class="input-group">
+                                    <label>Output Model Name</label>
+                                    <input type="text" id="train-model-name" value="model_custom.joblib">
+                                </div>
+                            </div>
+                            <button id="start-train-btn" class="primary-btn w-full mt-2">🔥 START TRAINING</button>
+                        </div>
+                        
+                        <div id="train-results" class="st-card mt-2 hidden">
+                            <div class="success-banner">
+                                <h3>✅ Model trained successfully!</h3>
+                            </div>
+                            <div class="metric-card mt-1">
+                                <span class="label">Training R² Score</span>
+                                <h1 id="train-r2-val">0.0000</h1>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 3. Explore Tab -->
+                    <section id="explore-tab" class="tab-content">
+                        <div class="content-header">
+                            <h3>🔍 Process Data Exploration</h3>
+                            <p class="caption">Deep dive into your bioprocess parameters before or after prediction.</p>
+                        </div>
+                        
+                        <div id="explore-idle-state" class="idle-banner mt-2">
+                            <div class="idle-icon">🧪</div>
+                            <h3>Analytical Workspace is Idle</h3>
+                            <p class="caption">Deep-dive exploration requires a dataset. Load our Golden Batch sample to see the system in action.</p>
+                            <div class="btn-group mt-2">
+                                <button id="load-explore-sample" class="primary-btn">Load Sample Data</button>
+                                <button class="outline-btn" onclick="navigateTo('predict-tab')">Go to Predict</button>
+                            </div>
+                        </div>
+
+                        <div id="explore-active-state" class="hidden mt-2">
+                            <div class="metrics-grid">
+                                <div class="metric-card"><span class="label">Avg Temp</span><h3 id="exp-avg-temp">--</h3></div>
+                                <div class="metric-card"><span class="label">Avg pH</span><h3 id="exp-avg-ph">--</h3></div>
+                                <div class="metric-card"><span class="label">Avg DO</span><h3 id="exp-avg-do">--</h3></div>
+                                <div class="metric-card"><span class="label">Avg Titer</span><h3 id="exp-avg-titer">--</h3></div>
+                            </div>
+
+                            <div class="dashboard-grid mt-2">
+                                <div class="st-card chart-cell">
+                                    <h3>🔥 Parameter Correlations</h3>
+                                    <div class="chart-wrapper">
+                                        <canvas id="exp-corr-heatmap"></canvas>
+                                    </div>
+                                </div>
+                                <div class="st-card chart-cell">
+                                    <h3>📈 Time-Series Trends</h3>
+                                    <div class="input-group">
+                                        <label>Select Parameters</label>
+                                        <select id="exp-trend-select" multiple></select>
+                                    </div>
+                                    <div class="chart-wrapper">
+                                        <canvas id="exp-trend-chart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="st-card chart-cell">
+                                    <h3>⚖️ Phase Plot</h3>
+                                    <div class="form-row">
+                                        <select id="exp-phase-x"></select>
+                                        <select id="exp-phase-y"></select>
+                                    </div>
+                                    <div class="chart-wrapper">
+                                        <canvas id="exp-phase-chart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="st-card chart-cell">
+                                    <h3>📊 Distribution</h3>
+                                    <div class="input-group">
+                                        <select id="exp-dist-select"></select>
+                                    </div>
+                                    <div class="chart-wrapper">
+                                        <canvas id="exp-dist-chart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="st-card mt-2">
+                                <h3>🧾 Summary Statistics Table</h3>
+                                <div class="table-container stats-table-wrapper">
+                                    <table id="exp-stats-table">
+                                        <thead>
+                                            <tr><th>Parameter</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th></tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 4. History Tab -->
+                    <section id="history-tab" class="tab-content">
+                        <div class="content-header">
+                            <h3>📜 Prediction History</h3>
+                            <p class="caption">View and manage your past model runs and benchmark results.</p>
+                        </div>
+                        
+                        <div class="st-card mt-2 history-workspace">
+                            <div class="pagination-header">
+                                <button id="hist-prev" class="outline-btn">⬅️ Previous</button>
+                                <span id="hist-page-info">Page 1 of 1 (0 total)</span>
+                                <button id="hist-next" class="outline-btn">Next ➡️</button>
+                            </div>
+
+                            <div class="table-container mt-1">
+                                <table id="history-table">
+                                    <thead>
+                                        <tr><th>ID</th><th>Timestamp</th><th>Model</th><th>Summary</th><th>Mode</th></tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+
+                            <div class="history-actions mt-2">
+                                <h4>Detailed Actions</h4>
+                                <div class="form-row">
+                                    <select id="history-select"></select>
+                                    <button id="del-history-item" class="primary-btn danger">🗑️ Delete</button>
+                                </div>
+                                <div id="history-json-preview" class="json-box mt-1 hidden">
+                                    <pre><code></code></pre>
+                                </div>
+                                <button id="download-full-history" class="outline-btn w-full mt-2">💾 Download Full History (CSV)</button>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 5. Guide Tab -->
+                    <section id="guide-tab" class="tab-content">
+                        <div class="content-header">
+                            <h2>📘 Bioprocessor's Analytics Masterclass</h2>
+                            <p class="caption">Translate mathematical graphs into actionable lab decisions.</p>
+                        </div>
+
+                        <div class="guide-grid mt-2">
+                            <!-- Section 1 -->
+                            <details class="guide-expander" open>
+                                <summary>🎯 1. Model Performance (Actual vs. Predicted)</summary>
+                                <div class="guide-content">
+                                    <div class="guide-row">
+                                        <div class="guide-col">
+                                            <h4>🔬 The Science</h4>
+                                            <p>In biology, "Noise" is constant. A model that tracks every dot perfectly is often <strong>overfit</strong>. We look for a model that captures the underlying metabolic trend.</p>
+                                            <h4>📊 How to Read</h4>
+                                            <ul>
+                                                <li><strong>Identity Line</strong>: Close dots mean the model understands your process.</li>
+                                                <li><strong>Bias Check</strong>: Consistent deviation suggests under or over prediction.</li>
+                                            </ul>
+                                        </div>
+                                        <div class="guide-col info-panel">
+                                            <h4>🛠️ Action Plan</h4>
+                                            <div class="alert warn">
+                                                <strong>Low R² (<0.6)</strong>: Inputs don't explain yield enough. Look for <em>Media Lot Variation</em> or <em>Inoculum Quality</em>.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <!-- Section 2 -->
+                            <details class="guide-expander">
+                                <summary>💡 2. Critical Process Parameters (Feature Importance)</summary>
+                                <div class="guide-content">
+                                    <div class="guide-row">
+                                        <div class="guide-col">
+                                            <h4>🔬 The Science</h4>
+                                            <p>Bioreactors are non-linear. Importance shows which variable is the <strong>limiting factor</strong> for production.</p>
+                                            <h4>📊 How to Read</h4>
+                                            <ul>
+                                                <li><strong>Top Bars</strong>: Your "Levers" with the biggest impact.</li>
+                                                <li><strong>Negative Importance</strong>: Increasing this variable hurts yield.</li>
+                                            </ul>
+                                        </div>
+                                        <div class="guide-col info-panel">
+                                            <h4>🛠️ Action Plan</h4>
+                                            <div class="alert success">
+                                                <strong>Optimization</strong>: If "Agitation" is high, process is <strong>Oxygen Limited</strong>. Increase RPM to unlock growth.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <!-- Section 3 -->
+                            <details class="guide-expander">
+                                <summary>🔥 3. Parameter Correlations (The Heatmap)</summary>
+                                <div class="guide-content">
+                                    <div class="guide-row">
+                                        <div class="guide-col">
+                                            <h4>🔬 The Science</h4>
+                                            <p>Variables are rarely independent. Henry's Law dictates that as Temp rises, Oxygen solubility drops.</p>
+                                            <h4>📊 How to Read</h4>
+                                            <ul>
+                                                <li><strong>Deep Red (+1.0)</strong>: Perfect coupling.</li>
+                                                <li><strong>Deep Blue (-1.0)</strong>: Inverse relationship (e.g. Growth vs Glucose).</li>
+                                            </ul>
+                                        </div>
+                                        <div class="guide-col info-panel">
+                                            <h4>🛠️ Action Plan</h4>
+                                            <div class="alert info">
+                                                <strong>Sensor Health</strong>: No correlation between expected variables suggests a fouled probe or equipment failure.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <!-- Section 4 -->
+                            <details class="guide-expander">
+                                <summary>📊 4. Distribution & Stability (Boxplots)</summary>
+                                <div class="guide-content">
+                                    <div class="guide-row">
+                                        <div class="guide-col">
+                                            <h4>🔬 The Science</h4>
+                                            <p>Consistency is the goal. Distributions show "Natural Variation" across runs.</p>
+                                            <h4>📊 How to Read</h4>
+                                            <ul>
+                                                <li><strong>The Box</strong>: Represents the 50% "Expected" range.</li>
+                                                <li><strong>Outliers</strong>: Batches where something went "Wrong".</li>
+                                            </ul>
+                                        </div>
+                                        <div class="guide-col info-panel">
+                                            <h4>🛠️ Action Plan</h4>
+                                            <div class="alert danger">
+                                                <strong>Root Cause Analysis</strong>: Inspect outliers to prevent future batch losses. Focus on standardization.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+                        
+                        <div class="st-card mt-2">
+                             <h3>📖 Glossary of Metrics</h3>
+                             <div class="glossary">
+                                 <div class="glossary-item">
+                                     <strong>R-Squared (R²)</strong>
+                                     <p>Yield variation explained by inputs. 0.8+ is excellent.</p>
+                                 </div>
+                                 <div class="glossary-item">
+                                     <strong>MAE</strong>
+                                     <p>Mean Absolute Error. The 'Average Miss' in real units (g/L).</p>
+                                 </div>
+                                 <div class="glossary-item">
+                                     <strong>RMSE</strong>
+                                     <p>Penalizes large errors heavily. High RMSE means rare big mistakes.</p>
+                                 </div>
+                             </div>
+                        </div>
+                    </section>
+
+                    <!-- 6. Alerts Tab -->
+                    <section id="alerts-tab" class="tab-content">
+                        <div class="content-header">
+                            <h2>🔔 Smart Email Alerts</h2>
+                            <p class="caption">Configure automated notifications based on model prediction results.</p>
+                        </div>
+                        <div class="st-card mt-2">
+                            <form id="alert-config-form" class="form-grid">
+                                <div class="form-section">
+                                    <h3>📢 Notification Rules</h3>
+                                    <label class="toggle-row">
+                                        <input type="checkbox" id="alert-enabled">
+                                        <span>🔔 Enable Email Alerts</span>
+                                    </label>
+                                    <div class="input-group mt-1">
+                                        <label>📧 Recipient Email</label>
+                                        <input type="email" id="alert-email">
+                                    </div>
+                                    <div class="input-group mt-1">
+                                        <label>📏 Titer Threshold (g/L)</label>
+                                        <input type="number" id="alert-threshold" step="0.1" value="5.0">
+                                    </div>
+                                    <div class="input-group mt-1">
+                                        <label>⚖️ Trigger Condition</label>
+                                        <select id="alert-condition">
+                                            <option value="above">above</option>
+                                            <option value="below">below</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-section">
+                                    <h3>🔐 SMTP Settings</h3>
+                                    <div class="alert info mb-1">💡 connectivity details required for outbound emails.</div>
+                                    <div class="input-group">
+                                        <label>🌐 SMTP Server</label>
+                                        <input type="text" id="smtp-server" value="smtp.gmail.com">
+                                    </div>
+                                    <div class="input-group mt-1">
+                                        <label>🔌 SMTP Port</label>
+                                        <input type="number" id="smtp-port" value="587">
+                                    </div>
+                                    <div class="input-group mt-1">
+                                        <label>👤 SMTP Username</label>
+                                        <input type="text" id="smtp-user">
+                                    </div>
+                                    <div class="input-group mt-1">
+                                        <label>🔑 SMTP Password</label>
+                                        <input type="password" id="smtp-pass">
+                                    </div>
+                                </div>
+                                <button type="submit" class="primary-btn w-full mt-2 grid-full">💾 SAVE SETTINGS</button>
+                            </form>
+                            <hr class="mt-2">
+                            <h3>🧪 Connectivity Check</h3>
+                            <button id="test-alert-btn" class="outline-btn w-full mt-1">📤 SEND TEST EMAIL</button>
+                        </div>
+                    </section>
+
+                    <!-- 7. Health Tab -->
+                    <section id="health-tab" class="tab-content">
+                        <div class="content-header">
+                            <h2>🖥️ System Health & Monitoring</h2>
+                            <p class="caption">Real-time operational metrics and application logs.</p>
+                        </div>
+                        <div class="metrics-grid mt-2">
+                            <div class="metric-card"><span class="label">CPU Usage</span><h3 id="sys-cpu">--%</h3></div>
+                            <div class="metric-card"><span class="label">Memory Usage</span><h3 id="sys-ram">--%</h3></div>
+                            <div class="metric-card"><span class="label">DB Latency</span><h3 id="sys-db-latency">-- ms</h3></div>
+                        </div>
+                        <div class="st-card mt-2">
+                            <div class="header-row">
+                                <h3>📜 Application Logs (bionexus_app.log)</h3>
+                                <button id="clear-logs-btn" class="outline-btn danger pill">🗑️ Clear Logs</button>
+                            </div>
+                            <div class="log-viewer mt-1">
+                                <pre id="log-content">Loading logs...</pre>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
