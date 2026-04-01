@@ -28,7 +28,8 @@ if not logger.handlers:
 
 logger.info("Logging initialized for BioNexus Backend.")
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Use provided Neon connection string as a fallback for the Render deployment
+DATABASE_URL = os.getenv("DATABASE_URL") or "postgresql://neondb_owner:npg_T0kLxlKt6ZDP@ep-divine-cake-am3nd1eo-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
 engine = create_engine(
     DATABASE_URL,
