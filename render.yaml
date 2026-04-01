@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: bionexus-react
+    runtime: docker
+    envVars:
+      - key: DATABASE_URL
+        description: "Postgres Connection String (Neon/RDS)"
+        sync: false
+      - key: PORT
+        value: 8000
+    plan: free # Can be changed to 'starter' if needed
+    numInstances: 1
+    disk:
+      name: bionexus-data
+      mountPath: /app/app/logs
+      sizeGB: 1

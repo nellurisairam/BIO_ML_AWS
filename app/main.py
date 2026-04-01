@@ -127,7 +127,12 @@ def clear_logs():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Mount the frontend directory to serve static assets
-frontend_path = BASE_DIR / "frontend"
-os.makedirs(frontend_path, exist_ok=True)
+# Mount the frontend directory to serve static assets (React version in production)
+frontend_path = BASE_DIR / "react-frontend" / "dist"
+if not frontend_path.exists():
+    frontend_path = BASE_DIR / "frontend"
+    logger.info(f"Serving legacy frontend from {frontend_path}")
+else:
+    logger.info(f"Serving React frontend from {frontend_path}")
+
 app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="frontend")
