@@ -84,9 +84,11 @@ def health_check(db: Session = Depends(get_db)):
     # DB Latency
     start_time = time.time()
     try:
-        db.execute("SELECT 1")
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
         latency = round((time.time() - start_time) * 1000, 2)
-    except Exception:
+    except Exception as e:
+        logger.error(f"DB Health check failed: {e}")
         latency = -1
         
     # Models Count
