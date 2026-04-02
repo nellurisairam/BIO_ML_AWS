@@ -52,18 +52,23 @@ function PredictTab({ showToast, setLatestData, latestData, user, windowRange = 
     setResults(null);
     
     const actualModel = modelChoice === 'Custom...' ? customModelPath : modelChoice;
-    const formData = new FormData();
-    if (!useSample) formData.append('file', selectedFile);
     
     let url = `${API_BASE}/predict/?model_name=${encodeURIComponent(actualModel)}&schema_name=${encodeURIComponent(schemaChoice)}`;
     if (useSample) url += `&use_sample=true`;
     
+    let requestOptions = {
+      method: 'POST',
+      headers: { 'X-User': user || 'testuser' }
+    };
+
+    if (!useSample) {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      requestOptions.body = formData;
+    }
+    
     try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'X-User': user || 'testuser' },
-        body: formData
-      });
+      const res = await fetch(url, requestOptions);
       const data = await res.json();
       
       if (res.ok) {
