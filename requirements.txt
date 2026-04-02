@@ -1,22 +1,22 @@
-# Core Project Dependencies
-fastapi
-uvicorn
-pandas
-numpy
-scikit-learn
-psycopg2-binary
-sqlalchemy
-python-dotenv
-python-multipart
-bcrypt
-joblib
-boto3
-gunicorn
-psutil
+# Pinned Versons to match local environment for BioNexus (2026 Stack)
+fastapi==0.135.2
+uvicorn==0.42.0
+pandas==2.3.3
+numpy==2.2.6
+scikit-learn==1.7.2
+psycopg2-binary==2.9.11
+sqlalchemy==2.0.48
+python-dotenv==1.2.2
+python-multipart==0.0.22
+bcrypt==5.0.0
+joblib==1.5.3
+boto3==1.42.79
+gunicorn==25.3.0
+psutil==7.2.2
 
-# Streamlit Dashboard Dependencies
-streamlit
-streamlit-authenticator
-pyyaml
-matplotlib
-seaborn
+# Dashboard UI
+streamlit==1.46.0
+streamlit-authenticator==0.4.1
+pyyaml==6.0.2
+matplotlib==3.11.0
+seaborn==0.14.0
