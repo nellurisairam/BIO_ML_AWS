@@ -8,7 +8,7 @@ COPY app/react-frontend/ ./
 RUN npm run build
 
 # Stage 2: Build the FastAPI backend and serve the frontend
-FROM python:3.11-slim
+FROM python:3.10.0-slim
 WORKDIR /app
 
 # Install system dependencies for psycopg2 and other packages
