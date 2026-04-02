@@ -9,13 +9,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ─────────────────────────────────────────────
-# Logging Configuration (from Reference)
+# Logging Configuration
 # ─────────────────────────────────────────────
-LOG_FILE = Path(__file__).parent.parent / "app.log"
+BASE_DIR = Path(__file__).parent.parent
+LOG_DIR = BASE_DIR / "logs"
+if not LOG_DIR.exists():
+    LOG_DIR.mkdir(exist_ok=True)
+
+LOG_FILE = LOG_DIR / "app.log"
 logger = logging.getLogger("BioNexus")
 logger.setLevel(logging.INFO)
 
 if not logger.handlers:
+    # 1MB per log file, keeping last 5
     handler = RotatingFileHandler(LOG_FILE, maxBytes=1024*1024, backupCount=5)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
