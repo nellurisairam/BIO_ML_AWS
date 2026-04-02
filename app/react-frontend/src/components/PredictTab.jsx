@@ -199,7 +199,17 @@ function PredictTab({ showToast, setLatestData, latestData, user, windowRange = 
             <div id="results-display" className="mt-2 animate-slide-in">
                 <div className="metric-box">
                   <span className="metric-label tooltip-wrapper" data-tooltip="The average expected Product Titer output for this entire batch of predictive inputs.">Predicted Mean Yield ⓘ</span>
-                  <h2 className="metric-val">{parseFloat(results.metrics?.mean_yield || (results.results.reduce((a,b)=>a+b, 0)/results.results.length)).toFixed(2)} g/L</h2>
+                  <h2 className="metric-val">
+                    {(() => {
+                        const m = results.metrics?.mean_yield;
+                        if (typeof m === 'number') return m.toFixed(2);
+                        if (results.results?.length > 0) {
+                            const avg = results.results.reduce((a, b) => a + (Number(b) || 0), 0) / results.results.length;
+                            return avg.toFixed(2);
+                        }
+                        return '0.00';
+                    })()} g/L
+                  </h2>
                 </div>
                 {mode === 'benchmark' && results.metrics && (
                   <div className="metrics-subgrid mt-1" style={{display: 'flex', gap: '15px'}}>

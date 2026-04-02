@@ -40,13 +40,27 @@ def run_prediction(df, model_name="model_ridgecv.joblib", schema_name="feature_s
             pass
 
         logger.info(f"Prediction successful for {len(preds)} rows.")
+        
+        import numpy as np
+        # Ensure all results are clean for JSON serialization
+        results_list = [float(x) if not np.isnan(x) and not np.isinf(x) else 0.0 for x in preds]
+        mean_yield = float(np.mean(results_list)) if results_list else 0.0
+        
+        final_metrics = metrics or {}
+        if metrics:
+            # Clean metrics for NaN/Inf
+            final_metrics = {k: (v if not np.isnan(v) and not np.isinf(v) else 0.0) for k, v in metrics.items()}
+        
+        final_metrics["mean_yield"] = mean_yield
+
         return {
-            "results": preds.tolist(),
-            "count": len(preds),
+            "results": results_list,
+            "count": len(results_list),
             "inputs": df.to_dict(orient="list"),
             "correlations": corr_matrix,
             "feature_importances": feature_importances,
-            "metrics": metrics
+            "metrics": final_metrics,
+            "model_name": model_name
         }
     except Exception as e:
         logger.error(f"Prediction error: {e}")
