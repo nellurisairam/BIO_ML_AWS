@@ -67,6 +67,22 @@ def startup_db_init():
             db.add(admin_user)
             logger.info("Default administrator 'admin' created (pass: admin123).")
         
+        # Simple Migration for AlertConfig
+        from sqlalchemy import text
+        try:
+            db.execute(text("SELECT email_provider FROM alerts LIMIT 1"))
+        except Exception:
+            logger.info("Migrating database: Adding 'email_provider' and 'api_key' to alerts table...")
+            db.rollback() # Clear the failed transaction
+            try:
+                db.execute(text("ALTER TABLE alerts ADD COLUMN email_provider VARCHAR DEFAULT 'smtp'"))
+                db.execute(text("ALTER TABLE alerts ADD COLUMN api_key VARCHAR"))
+                db.commit()
+                logger.info("Migration successful.")
+            except Exception as migration_error:
+                logger.error(f"Migration failed: {migration_error}")
+                db.rollback()
+
         db.commit()
     except Exception as e:
         logger.error(f"Error during database initialization: {e}")
