@@ -42,14 +42,13 @@ def send_email_alert(recipient: str, subject: str, body: str, smtp_config: Dict[
                 return False
             
             resend.api_key = api_key
-            params = {
+            r = resend.Emails.send({
                 "from": "BioNexus <onboarding@resend.dev>",
                 "to": [recipient],
                 "subject": subject,
                 "text": body,
-            }
-            resend.Emails.send(params)
-            logger.info(f"Email successfully dispatched (via Resend) to {recipient}")
+            })
+            logger.info(f"Email successfully dispatched (via Resend) to {recipient}. ID: {getattr(r, 'id', 'N/A')}")
             return True
             
         else:
