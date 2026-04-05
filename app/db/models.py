@@ -42,3 +42,5 @@ class AlertConfig(Base):
     smtp_port = Column(Integer, default=587)
     smtp_user = Column(String)
     smtp_pass = Column(String)
+    email_provider = Column(String, default="smtp")
+    api_key = Column(String)

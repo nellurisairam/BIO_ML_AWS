@@ -17,6 +17,8 @@ class AlertConfigRequest(BaseModel):
     smtp_port: int = 587
     smtp_user: Optional[str] = None
     smtp_pass: Optional[str] = None
+    email_provider: str = "smtp"
+    api_key: Optional[str] = None
 
 @router.get("/")
 def get_config(db: Session = Depends(get_db), username: str = Depends(get_current_user)):
@@ -33,7 +35,9 @@ def get_config(db: Session = Depends(get_db), username: str = Depends(get_curren
         "smtp_server": config.smtp_server,
         "smtp_port": config.smtp_port,
         "smtp_user": config.smtp_user,
-        "smtp_pass": config.smtp_pass
+        "smtp_pass": config.smtp_pass,
+        "email_provider": getattr(config, 'email_provider', 'smtp'),
+        "api_key": getattr(config, 'api_key', None)
     }
 
 @router.post("/")
@@ -58,7 +62,9 @@ def test_config(req: AlertConfigRequest, db: Session = Depends(get_db), username
             "smtp_server": req.smtp_server,
             "smtp_port": req.smtp_port,
             "smtp_user": req.smtp_user,
-            "smtp_pass": req.smtp_pass
+            "smtp_pass": req.smtp_pass,
+            "email_provider": req.email_provider,
+            "api_key": req.api_key
         }
         success = test_smtp_connection(smtp_config, req.target_email)
         if success:

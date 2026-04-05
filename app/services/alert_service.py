@@ -24,33 +24,57 @@ def save_alert_config(db: Session, username: str, config_data: Dict[str, Any]):
     alert.smtp_port = config_data.get('smtp_port', 587)
     alert.smtp_user = config_data.get('smtp_user')
     alert.smtp_pass = config_data.get('smtp_pass')
+    alert.email_provider = config_data.get('email_provider', 'smtp')
+    alert.api_key = config_data.get('api_key')
     
     db.commit()
 
 def send_email_alert(recipient: str, subject: str, body: str, smtp_config: Dict[str, Any]) -> bool:
     try:
-        msg = MIMEMultipart()
-        msg['From'] = smtp_config.get('smtp_user')
-        msg['To'] = recipient
-        msg['Subject'] = subject
-        msg.attach(MIMEText(body, 'plain'))
-
-        server = smtplib.SMTP(smtp_config.get('smtp_server'), smtp_config.get('smtp_port'))
-        server.starttls()
-        server.login(smtp_config.get('smtp_user'), smtp_config.get('smtp_pass'))
-        server.send_message(msg)
-        server.quit()
         from db.database import logger
-        logger.info(f"Email successfully dispatched to {recipient}")
-        return True
+        provider = smtp_config.get('email_provider', 'smtp')
+        
+        if provider == 'resend' or smtp_config.get('api_key'):
+            import resend
+            api_key = smtp_config.get('api_key')
+            if not api_key:
+                logger.error("Resend API key missing")
+                return False
+            
+            resend.api_key = api_key
+            params = {
+                "from": "BioNexus <onboarding@resend.dev>",
+                "to": [recipient],
+                "subject": subject,
+                "text": body,
+            }
+            resend.Emails.send(params)
+            logger.info(f"Email successfully dispatched (via Resend) to {recipient}")
+            return True
+            
+        else:
+            # Fallback to SMTP
+            msg = MIMEMultipart()
+            msg['From'] = smtp_config.get('smtp_user')
+            msg['To'] = recipient
+            msg['Subject'] = subject
+            msg.attach(MIMEText(body, 'plain'))
+
+            server = smtplib.SMTP(smtp_config.get('smtp_server'), smtp_config.get('smtp_port'))
+            server.starttls()
+            server.login(smtp_config.get('smtp_user'), smtp_config.get('smtp_pass'))
+            server.send_message(msg)
+            server.quit()
+            logger.info(f"Email successfully dispatched (via SMTP) to {recipient}")
+            return True
     except Exception as e:
         from db.database import logger
         logger.error(f"Email failed: {e}")
         return False
 
 def test_smtp_connection(smtp_config: Dict[str, Any], recipient: str) -> bool:
-    subject = "BioNexus: SMTP Connectivity Test"
-    body = "This is a test email from your BioNexus dashboard to verify SMTP settings."
+    subject = "BioNexus: Connectivity Test"
+    body = "This is a test email from your BioNexus dashboard to verify alert settings."
     return send_email_alert(recipient, subject, body, smtp_config)
 
 def check_and_send_alerts(db: Session, username: str, results: Dict[str, Any]):
@@ -59,14 +83,13 @@ def check_and_send_alerts(db: Session, username: str, results: Dict[str, Any]):
         return
 
     # Check predictions for threshold crossing
-    predictions = results.get("results", []) # Note: predict.py returns "results", not "predictions"
+    predictions = results.get("results", []) 
     if not predictions:
         return
 
     latest_val = predictions[-1]
     triggered = False
     
-    # Ensure config is not None for the following attributes
     condition = config.condition
     threshold = config.titer_threshold
     
@@ -76,7 +99,7 @@ def check_and_send_alerts(db: Session, username: str, results: Dict[str, Any]):
         matching_values = [v for v in predictions if v > threshold]
         if matching_values:
             triggered = True
-            latest_val = matching_values[0] # Pick the first one for alert details
+            latest_val = matching_values[0] 
     elif condition == "below":
         matching_values = [v for v in predictions if v < threshold]
         if matching_values:
@@ -85,15 +108,14 @@ def check_and_send_alerts(db: Session, username: str, results: Dict[str, Any]):
 
     logger.info(f"Checking alerts for {username}: Condition={condition}, Threshold={threshold}, Triggered={triggered}")
     
-    if not triggered:
-        logger.info(f"Alert not triggered for batch of {len(predictions)} rows")
-
     if triggered:
         smtp_config = {
             "smtp_server": config.smtp_server,
             "smtp_port": config.smtp_port,
             "smtp_user": config.smtp_user,
-            "smtp_pass": config.smtp_pass
+            "smtp_pass": config.smtp_pass,
+            "email_provider": config.email_provider,
+            "api_key": config.api_key
         }
         subject = f"BioNexus Alert: {condition.capitalize()} Threshold reached"
         body = f"User {username},\n\nYour recent prediction value {latest_val} has reached the {condition} threshold of {threshold}.\n\nModel: {results.get('model_name', 'Bioreactor_v1')}"
